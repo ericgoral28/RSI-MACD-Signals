@@ -1,0 +1,74 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © LvNThL
+
+//@version=5
+indicator("RSI/MACD Signals", "RMS", true)
+
+//RSI SIGNALS
+_rsi = ta.rsi(close, input.int(14, "RSI Length", minval = 1, maxval = 4999, group = "RSI"))
+_rsiSignals = input.bool(true, "Show RSI Signals?", group = "RSI", tooltip = string("RSI Signals are Red/Blue Triangles"))
+
+_isRSIbuy = false
+_isRSIbuy := nz(_isRSIbuy[1], false)
+
+_isRSIsell = false
+_isRSIsell := nz(_isRSIsell[1], false)
+
+_isRSIoverbought = false
+_isRSIoverbought := nz(_isRSIoverbought[1], false)
+
+_isRSIoversold = false
+_isRSIoversold := nz(_isRSIoversold[1], false)
+
+//RSI SIGNALS
+
+_rsibuySignal = not _isRSIbuy and (_rsi > 55)
+_rsisellSignal = not _isRSIsell and (_rsi < 45)
+_rsibuySignal2 = not _isRSIoverbought and (_rsi > 70)
+_rsisellSignal2 = not _isRSIoversold and (_rsi < 30)
+
+if _rsibuySignal
+	_isRSIbuy := true
+	_isRSIsell := false
+
+if _rsisellSignal
+	_isRSIbuy := false
+	_isRSIsell := true
+
+if _rsibuySignal2
+	_isRSIoverbought := true
+	_isRSIoversold := false
+
+if _rsisellSignal2
+	_isRSIoverbought := false
+	_isRSIoversold := true
+
+//MACD SIGNALS
+[_macd1, _, _histogram] = ta.macd(close, input.int(12, "Fast MACD", minval = 1, maxval = 4999, group = "MACD"), input.int(26, "Slow MACD", minval = 1, maxval = 4999, group = "MACD"), int(9))
+_macdSignals = input.bool(true, "Show MACD Signals?", group = "MACD", tooltip = string("MACD Signals are Red/Blue Circles"))
+
+_isMACDbuy = false
+_isMACDbuy := nz(_isMACDbuy[1], false)
+
+_isMACDsell = false
+_isMACDsell := nz(_isMACDsell[1], false)
+
+_macdbuySignal = not _isMACDbuy and (_macd1 > 0)
+_macdsellSignal = not _isMACDsell and (_macd1 < 0)
+
+if _macdbuySignal
+	_isMACDbuy := true
+	_isMACDsell := false
+
+if _macdsellSignal
+	_isMACDbuy := false
+	_isMACDsell := true
+
+plotshape(_rsiSignals and barstate.isconfirmed ? _rsibuySignal : na, "RSI Buy 1", shape.triangleup, location.belowbar, #0300ff, size = size.tiny)
+plotshape(_rsiSignals and barstate.isconfirmed ? _rsisellSignal : na, "RSI Sell 1", shape.triangledown, location.abovebar, #b22222, size = size.tiny)
+plotshape(_rsiSignals and barstate.isconfirmed ? _rsibuySignal2 : na, "RSI Buy 2", shape.xcross, location.belowbar, #0300ff, size = size.tiny)
+plotshape(_rsiSignals and barstate.isconfirmed ? _rsisellSignal2 : na, "RSI Sell 2", shape.xcross, location.abovebar, #b22222, size = size.tiny)
+
+plotshape(_macdSignals and barstate.isconfirmed ? _macdbuySignal and not _rsibuySignal : na, "MACD Buy 1", shape.circle, location.belowbar, #0300ff, size = size.tiny)
+plotshape(_macdSignals and barstate.isconfirmed ? _macdsellSignal and not _rsisellSignal : na, "MACD Sell 1", shape.circle, location.abovebar, #b22222, size = size.tiny)
+
